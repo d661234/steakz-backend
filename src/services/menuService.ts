@@ -3,32 +3,32 @@ import { Prisma } from '@prisma/client';
 
 export class MenuService {
   static async getMenuByBranch(branchId: string) {
-    return prisma.menu.findMany({
+    return prisma.menuItem.findMany({
       where: { branch_id: branchId },
     });
   }
 
   static async getMenuItemById(id: string) {
-    return prisma.menu.findUnique({
+    return prisma.menuItem.findUnique({
       where: { id },
     });
   }
 
-  static async createMenuItem(data: Prisma.MenuUncheckedCreateInput) {
-    return prisma.menu.create({
+  static async createMenuItem(data: Prisma.MenuItemUncheckedCreateInput) {
+    return prisma.menuItem.create({
       data,
     });
   }
 
-  static async updateMenuItem(id: string, data: Prisma.MenuUpdateInput) {
-    return prisma.menu.update({
+  static async updateMenuItem(id: string, data: Prisma.MenuItemUpdateInput) {
+    return prisma.menuItem.update({
       where: { id },
       data,
     });
   }
 
   static async deleteMenuItem(id: string) {
-    return prisma.menu.delete({
+    return prisma.menuItem.delete({
       where: { id },
     });
   }

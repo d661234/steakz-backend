@@ -16,7 +16,7 @@ async function main() {
     create: {
       email: adminEmail,
       password_hash: hashedPassword,
-      role: UserRole.SYSTEM_ADMIN,
+      role: UserRole.ADMIN,
     },
   });
 

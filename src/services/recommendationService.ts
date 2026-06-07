@@ -10,8 +10,8 @@ export class RecommendationService {
       include: { 
         favouriteItems: {
           select: { 
-            category: true, 
-            name: true 
+            id: true,
+            category: true
           }
         }
       }
@@ -23,7 +23,7 @@ export class RecommendationService {
 
     // Get categories of favourite items
     const favouriteCategories = [...new Set(
-      user.favouriteItems.map(item => item.category)
+      user.favouriteItems.map(item => item.category).filter((category): category is string => category != null)
     )];
 
     // Find similar items in those categories
@@ -42,10 +42,10 @@ export class RecommendationService {
   }
 
   async getOneClickReorder(userId: string, orderId: string) {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: { 
-        id: orderId, 
-        userId 
+        id: orderId,
+        customer_id: userId
       },
       include: { 
         items: { 
@@ -61,9 +61,9 @@ export class RecommendationService {
     // Create a new order with the same items
     const newOrder = await prisma.order.create({
       data: {
-        userId,
-        branchId: order.branchId,
-        totalPrice: order.totalPrice,
+        customer_id: userId,
+        branch_id: order.branch_id,
+        total_amount: order.total_amount,
         isRepeatedOrder: true,
         items: {
           create: order.items.map(item => ({

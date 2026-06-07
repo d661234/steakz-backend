@@ -7,7 +7,7 @@ import { UserRole } from '@prisma/client';
 const router = Router();
 
 router.use(authenticateJWT);
-router.use(authorize([UserRole.CUSTOMER, UserRole.SYSTEM_ADMIN]));
+router.use(authorize([UserRole.CUSTOMER, UserRole.ADMIN]));
 
 router.get('/profile', CustomerController.getProfile);
 router.put('/profile', CustomerController.updateProfile);

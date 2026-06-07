@@ -6,7 +6,7 @@ export class BranchService {
     return prisma.branch.findMany({
       include: {
         _count: {
-          select: { users: true, menus: true, tables: true, orders: true }
+          select: { staff: true, menuItems: true, orders: true, inventoryAlerts: true }
         }
       }
     });
@@ -16,9 +16,9 @@ export class BranchService {
     return prisma.branch.findUnique({
       where: { id },
       include: {
-        users: true,
-        menus: true,
-        tables: true
+        staff: true,
+        menuItems: true,
+        inventoryAlerts: true
       }
     });
   }

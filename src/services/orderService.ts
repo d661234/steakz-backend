@@ -7,10 +7,9 @@ export class OrderService {
       where,
       include: {
         branch: true,
-        table: true,
-        customer: true,
+        user: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { orderDate: 'desc' }
     });
   }
 
@@ -19,8 +18,7 @@ export class OrderService {
       where: { id },
       include: {
         branch: true,
-        table: true,
-        customer: true,
+        user: true,
       },
     });
   }
@@ -44,7 +42,7 @@ export class OrderService {
       include: {
         branch: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { orderDate: 'desc' }
     });
   }
 

@@ -34,17 +34,6 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'mark_order_completed',
     'view_order_details'
   ],
-  [UserRole.CASHIER]: [
-    'browse_branches',
-    'search_menu_items',
-    'view_menu_prices',
-    'read_restaurant_info',
-    'view_new_orders',
-    'update_order_status',
-    'mark_order_completed',
-    'view_order_details',
-    'confirm_payment'
-  ],
   [UserRole.BRANCH_MANAGER]: [
     'browse_branches',
     'search_menu_items',
@@ -73,7 +62,7 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'view_most_viewed_items',
     'compare_branch_performance'
   ],
-  [UserRole.SYSTEM_ADMIN]: [
+  [UserRole.ADMIN]: [
     'browse_branches',
     'search_menu_items',
     'view_menu_prices',
@@ -86,17 +75,6 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'audit_role_changes',
     'view_all_orders',
     'generate_sales_summary'
-  ],
-  [UserRole.CHIEF_SUPERVISOR]: [
-    'browse_branches',
-    'view_new_orders',
-    'update_order_status',
-    'view_complete_menu'
-  ],
-  [UserRole.HEAD_CHEF]: [
-    'browse_branches',
-    'view_new_orders',
-    'update_order_status'
   ]
 };
 

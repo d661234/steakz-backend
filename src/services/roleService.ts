@@ -1,5 +1,5 @@
 import { PrismaClient, UserRole } from '@prisma/client';
-import { checkPermission } from '../middleware/rbac';
+import { checkPermission } from '../middleware/rbac.js';
 
 const prisma = new PrismaClient();
 
