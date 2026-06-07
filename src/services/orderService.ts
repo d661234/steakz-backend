@@ -8,6 +8,11 @@ export class OrderService {
       include: {
         branch: true,
         user: true,
+        items: {
+          include: {
+            menuItem: true,
+          },
+        },
       },
       orderBy: { orderDate: 'desc' }
     });
@@ -19,6 +24,11 @@ export class OrderService {
       include: {
         branch: true,
         user: true,
+        items: {
+          include: {
+            menuItem: true,
+          },
+        },
       },
     });
   }
@@ -48,6 +58,11 @@ export class OrderService {
       where: { customer_id: customerId },
       include: {
         branch: true,
+        items: {
+          include: {
+            menuItem: true,
+          },
+        },
       },
       orderBy: { orderDate: 'desc' }
     });
