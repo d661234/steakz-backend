@@ -1,0 +1,118 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  SYSTEM_ADMIN
+  HQ_MANAGER
+  BRANCH_MANAGER
+  WAITER
+  CUSTOMER
+  OPEN_ACCESS
+}
+
+enum OrderStatus {
+  PLACED
+  COOKING
+  FINISHED_COOKING
+  SERVED
+  BILLED
+  PAID
+  CANCELLED
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password_hash    String
+  role             UserRole  @default(OPEN_ACCESS)
+  firstName        String?
+  lastName         String?
+  phoneNumber      String?
+  registeredAt     DateTime  @default(now())
+  lastLogin        DateTime?
+  isActive         Boolean   @default(true)
+  branch_id        String?
+  branch           Branch?   @relation(fields: [branch_id], references: [id])
+  favouriteItems   MenuItem[] @relation("UserFavourites")
+  orders           Order[]
+  roleChangeAudit  RoleChangeAudit[]
+  allergies        String[]
+}
+
+model RoleChangeAudit {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  previousRole   UserRole
+  newRole        UserRole
+  changedBy      String
+  changedAt      DateTime @default(now())
+}
+
+model Branch {
+  id               String    @id @default(cuid())
+  name             String    @unique
+  location_address String
+  contactNumber    String?
+  isActive         Boolean   @default(true)
+  latitude         Float?
+  longitude        Float?
+  orders           Order[]
+  menuItems        MenuItem[]
+  staff            User[]
+  inventoryAlerts  InventoryAlert[]
+}
+
+model MenuItem {
+  id               String    @id @default(cuid())
+  item_name        String
+  description      String?
+  price            Float
+  branch_id        String
+  branch           Branch    @relation(fields: [branch_id], references: [id])
+  category         String?
+  availability_status Boolean @default(true)
+  viewCount        Int       @default(0)
+  orderItems       OrderItem[]
+  favouritedBy     User[]    @relation("UserFavourites")
+}
+
+model Order {
+  id               String    @id @default(cuid())
+  customer_id      String?
+  user             User?     @relation(fields: [customer_id], references: [id])
+  branch_id        String
+  branch           Branch    @relation(fields: [branch_id], references: [id])
+  status           OrderStatus @default(PLACED)
+  total_amount     Float
+  orderDate        DateTime  @default(now())
+  items            OrderItem[]
+  isRepeatedOrder  Boolean   @default(false)
+  propagated_allergies String[]
+}
+
+model OrderItem {
+  id               String    @id @default(cuid())
+  orderId          String
+  order            Order     @relation(fields: [orderId], references: [id])
+  menuItemId       String
+  menuItem         MenuItem  @relation(fields: [menuItemId], references: [id])
+  quantity         Int
+  price            Float
+}
+
+model InventoryAlert {
+  id               String    @id @default(cuid())
+  branch_id        String
+  branch           Branch    @relation(fields: [branch_id], references: [id])
+  menuItemId       String
+  lowStockThreshold Int
+  currentStock     Int
+  alertDate        DateTime  @default(now())
+}
