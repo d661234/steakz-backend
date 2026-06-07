@@ -71,7 +71,7 @@ npm run dev
 |------|--------|-----------|
 | **Open Access** | Browse branches, menu items | Access dashboards, place orders |
 | **Customer** | Profile mgmt, place orders, view history, flag favorites | View other customers' data |
-| **Waiter/Cashier** | View branch orders, update status (`Pending` → `Approved` → `Completed`) | Edit order items, view analytics |
+| **Waiter** | View branch orders, update status (`Pending` → `Approved` → `Completed`) | Edit order items, view analytics |
 | **Branch Manager** | Full CRUD on menu items & pricing (branch-specific) | View system-wide analytics, manage other branches |
 | **HQ Manager** | Strategic analytics, sales reports, staff assignment | Manipulate menu items, manage orders |
 | **Admin** | Full CRUD on users, roles, branches | Interfere with daily restaurant operations |

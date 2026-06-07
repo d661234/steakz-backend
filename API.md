@@ -63,11 +63,11 @@ List orders (filtered by branch for staff).
 
 ### POST `/api/orders`
 Create an order.
-- **Roles**: CUSTOMER, WAITER, CASHIER
+- **Roles**: CUSTOMER, WAITER, ADMIN
 
 ### PATCH `/api/orders/:id/status`
 Update order status.
-- **Roles**: WAITER, CASHIER, BRANCH_MANAGER
+- **Roles**: WAITER, BRANCH_MANAGER, ADMIN
 
 ---
 

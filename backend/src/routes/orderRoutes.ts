@@ -8,14 +8,14 @@ const router = Router();
 
 router.use(authenticateJWT);
 
-// Waiter, Cashier, Branch Manager, HQ Manager, Admin can view orders
-router.get('/', authorize([UserRole.WAITER, UserRole.CASHIER, UserRole.BRANCH_MANAGER, UserRole.HQ_MANAGER, UserRole.SYSTEM_ADMIN]), OrderController.getAllOrders);
-router.get('/:id', authorize([UserRole.WAITER, UserRole.CASHIER, UserRole.BRANCH_MANAGER, UserRole.HQ_MANAGER, UserRole.SYSTEM_ADMIN]), OrderController.getOrderById);
+// Waiter, Branch Manager, HQ Manager, Admin can view orders
+router.get('/', authorize([UserRole.WAITER, UserRole.BRANCH_MANAGER, UserRole.HQ_MANAGER, UserRole.ADMIN]), OrderController.getAllOrders);
+router.get('/:id', authorize([UserRole.WAITER, UserRole.BRANCH_MANAGER, UserRole.HQ_MANAGER, UserRole.ADMIN]), OrderController.getOrderById);
 
 // Customers can create orders
-router.post('/', authorize([UserRole.CUSTOMER, UserRole.WAITER, UserRole.CASHIER, UserRole.SYSTEM_ADMIN]), OrderController.createOrder);
+router.post('/', authorize([UserRole.CUSTOMER, UserRole.WAITER, UserRole.ADMIN]), OrderController.createOrder);
 
 // Status updates
-router.patch('/:id/status', authorize([UserRole.WAITER, UserRole.CASHIER, UserRole.BRANCH_MANAGER, UserRole.SYSTEM_ADMIN]), OrderController.updateStatus);
+router.patch('/:id/status', authorize([UserRole.WAITER, UserRole.BRANCH_MANAGER, UserRole.ADMIN]), OrderController.updateStatus);
 
 export default router;

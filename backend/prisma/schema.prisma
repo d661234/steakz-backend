@@ -8,7 +8,7 @@ generator client {
 }
 
 enum UserRole {
-  SYSTEM_ADMIN
+  ADMIN
   HQ_MANAGER
   BRANCH_MANAGER
   WAITER

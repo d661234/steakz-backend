@@ -5,7 +5,7 @@ import { AuthRequest } from '../middleware/auth.js';
 export class OrderController {
   static async getAllOrders(req: AuthRequest, res: Response) {
     try {
-      // If branch manager or waiter/cashier, filter by their branch
+      // If branch manager or waiter, filter by their branch
       const where = req.user?.branch_id ? { branch_id: req.user.branch_id } : {};
       const orders = await OrderService.getAllOrders(where);
       res.status(200).json(orders);

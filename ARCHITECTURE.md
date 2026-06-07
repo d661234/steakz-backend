@@ -32,8 +32,8 @@ The system uses a relational database with the following core entities:
 
 ## Role-Based Access Control (RBAC)
 Strict isolation is maintained via middleware:
-- `SYSTEM_ADMIN`: Global CRUD.
+- `ADMIN`: Global CRUD.
 - `HQ_MANAGER`: Strategic reports and branch oversight.
 - `BRANCH_MANAGER`: Operational control over their specific branch.
-- `Staff (Waiter/Cashier)`: Daily operational tasks (orders).
+- `Waiter`: Daily operational tasks (orders).
 - `Customer`: Profile and order history.

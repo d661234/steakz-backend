@@ -7,7 +7,7 @@ import { UserRole } from '@prisma/client';
 const router = Router();
 
 router.use(authenticateJWT);
-router.use(authorize([UserRole.HQ_MANAGER, UserRole.SYSTEM_ADMIN]));
+router.use(authorize([UserRole.HQ_MANAGER, UserRole.ADMIN]));
 
 router.get('/analytics/sales', HQController.getSalesAnalytics);
 router.get('/reports/branches', HQController.getBranchPerformance);

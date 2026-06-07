@@ -2,14 +2,12 @@
 
 ## Enum: Role
 Used for RBAC across the system.
-- `SYSTEM_ADMIN`
+- `ADMIN`
 - `HQ_MANAGER`
 - `BRANCH_MANAGER`
-- `CHIEF_SUPERVISOR`
-- `HEAD_CHEF`
 - `WAITER`
-- `CASHIER`
 - `CUSTOMER`
+- `OPEN_ACCESS`
 
 ## Enum: OrderStatus
 Tracks the lifecycle of an order.
