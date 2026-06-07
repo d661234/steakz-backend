@@ -114,6 +114,34 @@ export class ReportService {
     });
   }
 
+  static async getInventoryAlerts() {
+    const alerts = await prisma.inventoryAlert.findMany({
+      orderBy: { alertDate: 'desc' },
+    });
+
+    const branchIds = alerts.map((alert) => alert.branch_id);
+    const menuItemIds = alerts.map((alert) => alert.menuItemId);
+
+    const branches = await prisma.branch.findMany({
+      where: { id: { in: branchIds } },
+      select: { id: true, name: true },
+    });
+
+    const menuItems = await prisma.menuItem.findMany({
+      where: { id: { in: menuItemIds } },
+      select: { id: true, item_name: true },
+    });
+
+    return alerts.map((alert) => ({
+      id: alert.id,
+      branchName: branches.find((branch) => branch.id === alert.branch_id)?.name || 'Unknown Branch',
+      itemName: menuItems.find((item) => item.id === alert.menuItemId)?.item_name || 'Unknown Item',
+      currentStock: alert.currentStock,
+      lowStockThreshold: alert.lowStockThreshold,
+      alertDate: alert.alertDate,
+    }));
+  }
+
   static async getGlobalStats() {
     const totalSales = await prisma.order.aggregate({
       _sum: {

@@ -111,4 +111,13 @@ export class HQController {
       res.status(500).json({ message: 'Failed to fetch most viewed menu items' });
     }
   }
+
+  static async getInventoryAlerts(req: Request, res: Response) {
+    try {
+      const alerts = await ReportService.getInventoryAlerts();
+      res.status(200).json(alerts);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch inventory alerts' });
+    }
+  }
 }

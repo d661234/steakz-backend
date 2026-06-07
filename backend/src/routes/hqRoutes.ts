@@ -15,6 +15,7 @@ router.get('/analytics/global-stats', HQController.getGlobalStats);
 router.get('/analytics/peak-times', HQController.getPeakTimes);
 router.get('/analytics/customer-frequency', HQController.getCustomerFrequency);
 router.get('/analytics/top-menu-items', HQController.getMostViewedMenuItems);
+router.get('/analytics/inventory-alerts', HQController.getInventoryAlerts);
 router.get('/staff', HQController.getAllStaff);
 router.post('/staff/assign', HQController.assignStaffToBranch);
 
