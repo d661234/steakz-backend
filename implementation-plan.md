@@ -65,7 +65,7 @@ Each phase includes:
 
 ### Goals
 - Replace mock-only frontend pages with real API-driven pages
-- Build the customer, admin, manager, waiter, and branch manager workflows
+- Build the customer, admin, HQ manager, waiter, and branch manager workflows
 - Add open-access browsing, login, registration, and protected route enforcement
 
 ### Key tasks
