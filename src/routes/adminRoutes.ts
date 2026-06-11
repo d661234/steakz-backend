@@ -11,6 +11,7 @@ router.use(authenticateJWT);
 router.use(authorize([UserRole.ADMIN]));
 
 router.get('/users', AdminController.getAllUsers);
+router.post('/users', AdminController.createUser);
 router.get('/users/activity-summary', AdminController.getUserActivitySummary);
 router.get('/users/audit-log', AdminController.getUserAuditLog);
 router.get('/users/:id', AdminController.getUserById);

@@ -23,7 +23,7 @@ export class UserService {
     });
   }
 
-  static async getUserById(id: string) {
+  static async getUserById(id: number) {
     return prisma.user.findUnique({
       where: { id },
       include: {
@@ -32,7 +32,7 @@ export class UserService {
     });
   }
 
-  static async getFavouriteItems(userId: string) {
+  static async getFavouriteItems(userId: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -43,7 +43,7 @@ export class UserService {
     return user?.favouriteItems ?? [];
   }
 
-  static async addFavouriteItem(userId: string, itemId: string) {
+  static async addFavouriteItem(userId: number, itemId: number) {
     return prisma.user.update({
       where: { id: userId },
       data: {
@@ -57,7 +57,7 @@ export class UserService {
     });
   }
 
-  static async removeFavouriteItem(userId: string, itemId: string) {
+  static async removeFavouriteItem(userId: number, itemId: number) {
     return prisma.user.update({
       where: { id: userId },
       data: {
@@ -77,7 +77,7 @@ export class UserService {
     });
   }
 
-  static async assignStaffToBranch(staffId: string, branchId: string) {
+  static async assignStaffToBranch(staffId: number, branchId: number) {
     return prisma.user.update({
       where: { id: staffId },
       data: {
@@ -95,14 +95,15 @@ export class UserService {
     });
   }
 
-  static async updateUser(id: string, data: Prisma.UserUpdateInput) {
+  static async updateUser(id: number, data: Prisma.UserUpdateInput) {
     return prisma.user.update({
       where: { id },
       data,
+      include: { branch: true },
     });
   }
 
-  static async deleteUser(id: string) {
+  static async deleteUser(id: number) {
     return prisma.user.delete({
       where: { id },
     });

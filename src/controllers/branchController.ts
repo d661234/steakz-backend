@@ -2,9 +2,11 @@ import { Request, Response } from 'express';
 import { BranchService } from '../services/branchService.js';
 import { MenuService } from '../services/menuService.js';
 
+const id   = (p: string | string[]) => parseInt(p as string);
+
 export class BranchController {
   // Branch Operations
-  static async getAllBranches(req: Request, res: Response) {
+  static async getAllBranches(_req: Request, res: Response) {
     try {
       const branches = await BranchService.getAllBranches();
       res.status(200).json(branches);
@@ -13,7 +15,7 @@ export class BranchController {
     }
   }
 
-  static async getPublicBranches(req: Request, res: Response) {
+  static async getPublicBranches(_req: Request, res: Response) {
     try {
       const branches = await BranchService.getPublicBranches();
       res.status(200).json(branches);
@@ -24,7 +26,7 @@ export class BranchController {
 
   static async getPublicMenuByBranch(req: Request, res: Response) {
     try {
-      const menu = await BranchService.getPublicMenuByBranch(req.params.branchId as string);
+      const menu = await BranchService.getPublicMenuByBranch(id(req.params.branchId));
       res.status(200).json(menu);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch public menu' });
@@ -33,7 +35,7 @@ export class BranchController {
 
   static async getBranchById(req: Request, res: Response) {
     try {
-      const branch = await BranchService.getBranchById(req.params.id as string);
+      const branch = await BranchService.getBranchById(id(req.params.id));
       if (!branch) return res.status(404).json({ message: 'Branch not found' });
       res.status(200).json(branch);
     } catch (error) {
@@ -52,7 +54,7 @@ export class BranchController {
 
   static async updateBranch(req: Request, res: Response) {
     try {
-      const branch = await BranchService.updateBranch(req.params.id as string, req.body);
+      const branch = await BranchService.updateBranch(id(req.params.id), req.body);
       res.status(200).json(branch);
     } catch (error) {
       res.status(500).json({ message: 'Failed to update branch' });
@@ -61,17 +63,18 @@ export class BranchController {
 
   static async deleteBranch(req: Request, res: Response) {
     try {
-      await BranchService.deleteBranch(req.params.id as string);
-      res.status(204).send();
+      await BranchService.deleteBranch(id(req.params.id));
+      res.status(200).json({ message: 'Branch deleted successfully' });
     } catch (error) {
-      res.status(500).json({ message: 'Failed to delete branch' });
+      const message = error instanceof Error ? error.message : 'Failed to delete branch';
+      res.status(500).json({ message });
     }
   }
 
   // Menu Operations
   static async getMenuByBranch(req: Request, res: Response) {
     try {
-      const menu = await MenuService.getMenuByBranch(req.params.branchId as string);
+      const menu = await MenuService.getMenuByBranch(id(req.params.branchId));
       res.status(200).json(menu);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch menu' });
@@ -82,7 +85,7 @@ export class BranchController {
     try {
       const menuItem = await MenuService.createMenuItem({
         ...req.body,
-        branch_id: req.params.branchId as string
+        branch_id: id(req.params.branchId),
       });
       res.status(201).json(menuItem);
     } catch (error) {
@@ -92,7 +95,7 @@ export class BranchController {
 
   static async updateMenuItem(req: Request, res: Response) {
     try {
-      const menuItem = await MenuService.updateMenuItem(req.params.id as string, req.body);
+      const menuItem = await MenuService.updateMenuItem(id(req.params.id), req.body);
       res.status(200).json(menuItem);
     } catch (error) {
       res.status(500).json({ message: 'Failed to update menu item' });
@@ -101,10 +104,11 @@ export class BranchController {
 
   static async deleteMenuItem(req: Request, res: Response) {
     try {
-      await MenuService.deleteMenuItem(req.params.id as string);
-      res.status(204).send();
+      await MenuService.deleteMenuItem(id(req.params.id));
+      res.status(200).json({ message: 'Menu item deleted successfully' });
     } catch (error) {
-      res.status(500).json({ message: 'Failed to delete menu item' });
+      const message = error instanceof Error ? error.message : 'Failed to delete menu item';
+      res.status(500).json({ message });
     }
   }
 }

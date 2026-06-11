@@ -7,15 +7,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_change_m
 const JWT_EXPIRES_IN = '1d';
 
 export class AuthService {
-  static async register(email: string, password: string, role: UserRole, branch_id?: string) {
+  static async register(email: string, password: string, role: UserRole, branch_id?: number, firstName?: string, lastName?: string, phoneNumber?: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     const user = await prisma.user.create({
       data: {
         email,
         password_hash: hashedPassword,
         role,
         branch_id,
+        firstName,
+        lastName,
+        phoneNumber,
       },
     });
 
@@ -29,6 +32,10 @@ export class AuthService {
 
     if (!user) {
       throw new Error('Invalid email or password');
+    }
+
+    if (!user.isActive) {
+      throw new Error('Your account has been deactivated. Please contact an administrator.');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);

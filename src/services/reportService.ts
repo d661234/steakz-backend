@@ -88,7 +88,7 @@ export class ReportService {
       }
     });
 
-    const customerIds = frequency.map(item => item.customer_id).filter(Boolean) as string[];
+    const customerIds = frequency.map(item => item.customer_id).filter(Boolean) as number[];
     const customers = await prisma.user.findMany({
       where: { id: { in: customerIds } },
       select: { id: true, firstName: true, lastName: true, email: true }
@@ -115,31 +115,54 @@ export class ReportService {
   }
 
   static async getInventoryAlerts() {
+    // Manual inventory alerts
     const alerts = await prisma.inventoryAlert.findMany({
       orderBy: { alertDate: 'desc' },
+      include: { branch: { select: { id: true, name: true } } },
     });
 
-    const branchIds = alerts.map((alert) => alert.branch_id);
-    const menuItemIds = alerts.map((alert) => alert.menuItemId);
-
-    const branches = await prisma.branch.findMany({
-      where: { id: { in: branchIds } },
-      select: { id: true, name: true },
-    });
-
+    const menuItemIds = alerts.map((a) => a.menuItemId);
     const menuItems = await prisma.menuItem.findMany({
       where: { id: { in: menuItemIds } },
       select: { id: true, item_name: true },
     });
 
-    return alerts.map((alert) => ({
-      id: alert.id,
-      branchName: branches.find((branch) => branch.id === alert.branch_id)?.name || 'Unknown Branch',
-      itemName: menuItems.find((item) => item.id === alert.menuItemId)?.item_name || 'Unknown Item',
+    const manualAlerts = alerts.map((alert) => ({
+      id: `alert-${alert.id}`,
+      type: 'manual' as const,
+      branchName: alert.branch.name,
+      itemName: menuItems.find((m) => m.id === alert.menuItemId)?.item_name ?? 'Unknown Item',
       currentStock: alert.currentStock,
       lowStockThreshold: alert.lowStockThreshold,
       alertDate: alert.alertDate,
+      status: null,
+      quantity: null,
+      unit: null,
+      notes: null,
     }));
+
+    // Active restock requests (PENDING or ACKNOWLEDGED) surface as alerts
+    const stockRequests = await prisma.stockRequest.findMany({
+      where: { status: { in: ['PENDING', 'ACKNOWLEDGED'] } },
+      orderBy: { createdAt: 'desc' },
+      include: { branch: { select: { id: true, name: true } } },
+    });
+
+    const restockAlerts = stockRequests.map((req) => ({
+      id: `req-${req.id}`,
+      type: 'restock' as const,
+      branchName: req.branch.name,
+      itemName: req.item_name,
+      currentStock: 0,
+      lowStockThreshold: 0,
+      alertDate: req.createdAt,
+      status: req.status,
+      quantity: req.quantity,
+      unit: req.unit,
+      notes: req.notes ?? null,
+    }));
+
+    return [...restockAlerts, ...manualAlerts];
   }
 
   static async getGlobalStats() {

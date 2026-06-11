@@ -4,457 +4,73 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@steakz.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword';
-  const adminName = process.env.ADMIN_NAME || 'Admin User';
+  const password = await bcrypt.hash('password123', 10);
 
-  const defaultPassword = process.env.DEFAULT_PASSWORD || 'password123';
-  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-
-  const admin = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {
-      password_hash: hashedPassword,
-      role: UserRole.ADMIN,
-      firstName: 'Admin',
-      lastName: 'User',
-    },
-    create: {
-      email: adminEmail,
-      password_hash: hashedPassword,
-      role: UserRole.ADMIN,
-      firstName: 'Admin',
-      lastName: 'User',
-    },
+  // ── Users (upsert by email — safe to run repeatedly) ──────────────────────
+  await prisma.user.upsert({
+    where:  { email: 'admin@steakz.com' },
+    update: { password_hash: password, role: UserRole.ADMIN, firstName: 'Admin', lastName: 'User' },
+    create: { email: 'admin@steakz.com', password_hash: password, role: UserRole.ADMIN, firstName: 'Admin', lastName: 'User' },
   });
 
-  const branch = await prisma.branch.upsert({
-    where: { name: 'Main Branch' },
+  // ── Branches (upsert by name) ──────────────────────────────────────────────
+  const mainBranch = await prisma.branch.upsert({
+    where:  { name: 'Steakz London Branch' },
     update: {},
-    create: {
-      name: 'Main Branch',
-      location_address: '123 Steakhouse Ave, Meat City',
-    },
+    create: { name: 'Steakz London Branch', location_address: '123 Steakhouse Ave, London' },
   });
 
   const uptownBranch = await prisma.branch.upsert({
-    where: { name: 'Uptown Branch' },
+    where:  { name: 'Steakz Uptown Branch' },
     update: {},
-    create: {
-      name: 'Uptown Branch',
-      location_address: '456 Grill Street, Steak City',
-    },
+    create: { name: 'Steakz Uptown Branch', location_address: '456 Grill Street, Manchester' },
   });
 
-  const hqManager = await prisma.user.upsert({
-    where: { email: 'hq@steakz.com' },
-    update: {
-      password_hash: hashedPassword,
-      role: UserRole.HQ_MANAGER,
-      firstName: 'HQ',
-      lastName: 'Manager',
-    },
-    create: {
-      email: 'hq@steakz.com',
-      password_hash: hashedPassword,
-      role: UserRole.HQ_MANAGER,
-      firstName: 'HQ',
-      lastName: 'Manager',
-    },
-  });
+  // ── Menu items (only seed if branch has none yet) ─────────────────────────
+  const mainMenuCount = await prisma.menuItem.count({ where: { branch_id: mainBranch.id } });
+  if (mainMenuCount === 0) {
+    await prisma.menuItem.createMany({
+      data: [
+        { item_name: 'Grilled Ribeye',   description: 'Juicy ribeye steak with garlic butter',                  price: 35.99, category: 'Main Course', availability_status: true,  viewCount: 125, branch_id: mainBranch.id },
+        { item_name: 'Classic Cheeseburger', description: 'Beef burger with cheese, lettuce, and tomato',       price: 18.50, category: 'Main Course', availability_status: false, viewCount:  98, branch_id: mainBranch.id },
+        { item_name: 'Caesar Salad',     description: 'Crisp romaine with parmesan and croutons',               price: 12.25, category: 'Appetizer',   availability_status: false, viewCount:  72, branch_id: mainBranch.id },
+        { item_name: 'BBQ Beef Ribs',    description: 'Slow-smoked ribs glazed in smoky BBQ sauce',             price: 32.50, category: 'Main Course', availability_status: true,  viewCount:  89, branch_id: mainBranch.id },
+        { item_name: 'Chicken Tikka',    description: 'Tender chicken marinated in spiced yoghurt, char-grilled', price: 22.00, category: 'Main Course', availability_status: true, viewCount: 74, branch_id: mainBranch.id },
+        { item_name: 'Garlic Bread',     description: 'Toasted baguette with herb garlic butter',               price:  6.50, category: 'Appetizer',   availability_status: false, viewCount: 110, branch_id: mainBranch.id },
+        { item_name: 'Mango Sorbet',     description: 'Refreshing tropical sorbet made from real mango',        price:  8.00, category: 'Dessert',     availability_status: true,  viewCount:  45, branch_id: mainBranch.id },
+        { item_name: 'Iced Lemonade',    description: 'Freshly squeezed lemonade over crushed ice',             price:  4.50, category: 'Beverage',    availability_status: true,  viewCount: 130, branch_id: mainBranch.id },
+        { item_name: 'sadza',            description: 'carbohydrates',                                          price:  5.00, category: 'Main Course', availability_status: true,  viewCount:   0, branch_id: mainBranch.id },
+      ],
+    });
+  }
 
-  const branchManager = await prisma.user.upsert({
-    where: { email: 'branch_manager@steakz.com' },
-    update: {
-      password_hash: hashedPassword,
-      role: UserRole.BRANCH_MANAGER,
-      branch_id: branch.id,
-      firstName: 'Branch',
-      lastName: 'Manager',
-    },
-    create: {
-      email: 'branch_manager@steakz.com',
-      password_hash: hashedPassword,
-      role: UserRole.BRANCH_MANAGER,
-      branch_id: branch.id,
-      firstName: 'Branch',
-      lastName: 'Manager',
-    },
-  });
+  const uptownMenuCount = await prisma.menuItem.count({ where: { branch_id: uptownBranch.id } });
+  if (uptownMenuCount === 0) {
+    await prisma.menuItem.createMany({
+      data: [
+        { item_name: 'Steak Frites',      description: 'Sirloin steak with fries and herb butter',                               price: 29.00, category: 'Main Course', availability_status: true, viewCount: 118, branch_id: uptownBranch.id },
+        { item_name: 'Truffle Fries',     description: 'Crispy fries tossed in truffle oil',                                     price:  9.99, category: 'Side',        availability_status: true, viewCount:  84, branch_id: uptownBranch.id },
+        { item_name: 'Chocolate Lava Cake', description: 'Warm chocolate cake with molten center',                               price: 11.50, category: 'Dessert',     availability_status: true, viewCount:  60, branch_id: uptownBranch.id },
+        { item_name: 'Surf & Turf',       description: 'Filet mignon paired with grilled tiger prawns',                          price: 45.00, category: 'Main Course', availability_status: true, viewCount:  95, branch_id: uptownBranch.id },
+        { item_name: 'Greek Salad',       description: 'Tomatoes, cucumber, olives, and feta with oregano dressing',             price: 11.00, category: 'Salad',       availability_status: true, viewCount:  55, branch_id: uptownBranch.id },
+        { item_name: 'French Onion Soup', description: 'Rich caramelised onion broth topped with gruyère crouton',               price: 10.50, category: 'Appetizer',   availability_status: true, viewCount:  67, branch_id: uptownBranch.id },
+        { item_name: 'Tiramisu',          description: 'Classic Italian dessert with espresso-soaked ladyfingers and mascarpone', price: 10.00, category: 'Dessert',     availability_status: true, viewCount:  78, branch_id: uptownBranch.id },
+      ],
+    });
+  }
 
-  const waiter = await prisma.user.upsert({
-    where: { email: 'waiter@steakz.com' },
-    update: {
-      password_hash: hashedPassword,
-      role: UserRole.WAITER,
-      branch_id: branch.id,
-      firstName: 'Waiter',
-      lastName: 'User',
-    },
-    create: {
-      email: 'waiter@steakz.com',
-      password_hash: hashedPassword,
-      role: UserRole.WAITER,
-      branch_id: branch.id,
-      firstName: 'Waiter',
-      lastName: 'User',
-    },
-  });
-
-  const customer = await prisma.user.upsert({
-    where: { email: 'customer@steakz.com' },
-    update: {
-      password_hash: hashedPassword,
-      role: UserRole.CUSTOMER,
-      firstName: 'Customer',
-      lastName: 'User',
-    },
-    create: {
-      email: 'customer@steakz.com',
-      password_hash: hashedPassword,
-      role: UserRole.CUSTOMER,
-      firstName: 'Customer',
-      lastName: 'User',
-    },
-  });
-
-  const openAccess = await prisma.user.upsert({
-    where: { email: 'open_access@steakz.com' },
-    update: {
-      password_hash: hashedPassword,
-      role: UserRole.OPEN_ACCESS,
-      firstName: 'Open',
-      lastName: 'Access',
-    },
-    create: {
-      email: 'open_access@steakz.com',
-      password_hash: hashedPassword,
-      role: UserRole.OPEN_ACCESS,
-      firstName: 'Open',
-      lastName: 'Access',
-    },
-  });
-
-  const repeatCustomer = await prisma.user.upsert({
-    where: { email: 'repeat_customer@steakz.com' },
-    update: {
-      password_hash: hashedPassword,
-      role: UserRole.CUSTOMER,
-      firstName: 'Repeat',
-      lastName: 'Customer',
-    },
-    create: {
-      email: 'repeat_customer@steakz.com',
-      password_hash: hashedPassword,
-      role: UserRole.CUSTOMER,
-      firstName: 'Repeat',
-      lastName: 'Customer',
-    },
-  });
-
-  const menuItem1 = await prisma.menuItem.upsert({
-    where: { id: 'menu1' },
-    update: {
-      item_name: 'Grilled Ribeye',
-      price: 35.99,
-      description: 'Juicy ribeye steak with garlic butter',
-      category: 'Main Course',
-      availability_status: true,
-      viewCount: 125,
-      branch_id: branch.id,
-    },
-    create: {
-      id: 'menu1',
-      item_name: 'Grilled Ribeye',
-      description: 'Juicy ribeye steak with garlic butter',
-      price: 35.99,
-      category: 'Main Course',
-      availability_status: true,
-      viewCount: 125,
-      branch_id: branch.id,
-    },
-  });
-
-  const menuItem2 = await prisma.menuItem.upsert({
-    where: { id: 'menu2' },
-    update: {
-      item_name: 'Classic Cheeseburger',
-      price: 18.5,
-      description: 'Beef burger with cheese, lettuce, and tomato',
-      category: 'Main Course',
-      availability_status: true,
-      viewCount: 98,
-      branch_id: branch.id,
-    },
-    create: {
-      id: 'menu2',
-      item_name: 'Classic Cheeseburger',
-      description: 'Beef burger with cheese, lettuce, and tomato',
-      price: 18.5,
-      category: 'Main Course',
-      availability_status: true,
-      viewCount: 98,
-      branch_id: branch.id,
-    },
-  });
-
-  const menuItem3 = await prisma.menuItem.upsert({
-    where: { id: 'menu3' },
-    update: {
-      item_name: 'Caesar Salad',
-      price: 12.25,
-      description: 'Crisp romaine with parmesan and croutons',
-      category: 'Appetizer',
-      availability_status: true,
-      viewCount: 72,
-      branch_id: branch.id,
-    },
-    create: {
-      id: 'menu3',
-      item_name: 'Caesar Salad',
-      description: 'Crisp romaine with parmesan and croutons',
-      price: 12.25,
-      category: 'Appetizer',
-      availability_status: true,
-      viewCount: 72,
-      branch_id: branch.id,
-    },
-  });
-
-  const menuItem4 = await prisma.menuItem.upsert({
-    where: { id: 'menu4' },
-    update: {
-      item_name: 'Steak Frites',
-      price: 29.0,
-      description: 'Sirloin steak with fries and herb butter',
-      category: 'Main Course',
-      availability_status: true,
-      viewCount: 118,
-      branch_id: uptownBranch.id,
-    },
-    create: {
-      id: 'menu4',
-      item_name: 'Steak Frites',
-      description: 'Sirloin steak with fries and herb butter',
-      price: 29.0,
-      category: 'Main Course',
-      availability_status: true,
-      viewCount: 118,
-      branch_id: uptownBranch.id,
-    },
-  });
-
-  const menuItem5 = await prisma.menuItem.upsert({
-    where: { id: 'menu5' },
-    update: {
-      item_name: 'Truffle Fries',
-      price: 9.99,
-      description: 'Crispy fries tossed in truffle oil',
-      category: 'Side',
-      availability_status: true,
-      viewCount: 84,
-      branch_id: uptownBranch.id,
-    },
-    create: {
-      id: 'menu5',
-      item_name: 'Truffle Fries',
-      description: 'Crispy fries tossed in truffle oil',
-      price: 9.99,
-      category: 'Side',
-      availability_status: true,
-      viewCount: 84,
-      branch_id: uptownBranch.id,
-    },
-  });
-
-  const menuItem6 = await prisma.menuItem.upsert({
-    where: { id: 'menu6' },
-    update: {
-      item_name: 'Chocolate Lava Cake',
-      price: 11.5,
-      description: 'Warm chocolate cake with molten center',
-      category: 'Dessert',
-      availability_status: true,
-      viewCount: 60,
-      branch_id: uptownBranch.id,
-    },
-    create: {
-      id: 'menu6',
-      item_name: 'Chocolate Lava Cake',
-      description: 'Warm chocolate cake with molten center',
-      price: 11.5,
-      category: 'Dessert',
-      availability_status: true,
-      viewCount: 60,
-      branch_id: uptownBranch.id,
-    },
-  });
-
-  const inventoryAlert1 = await prisma.inventoryAlert.upsert({
-    where: { id: 'inventory1' },
-    update: {
-      branch_id: branch.id,
-      menuItemId: menuItem2.id,
-      currentStock: 3,
-      lowStockThreshold: 10,
-      alertDate: new Date('2026-06-01T08:00:00Z'),
-    },
-    create: {
-      id: 'inventory1',
-      branch_id: branch.id,
-      menuItemId: menuItem2.id,
-      currentStock: 3,
-      lowStockThreshold: 10,
-      alertDate: new Date('2026-06-01T08:00:00Z'),
-    },
-  });
-
-  const inventoryAlert2 = await prisma.inventoryAlert.upsert({
-    where: { id: 'inventory2' },
-    update: {
-      branch_id: uptownBranch.id,
-      menuItemId: menuItem5.id,
-      currentStock: 5,
-      lowStockThreshold: 12,
-      alertDate: new Date('2026-06-02T09:30:00Z'),
-    },
-    create: {
-      id: 'inventory2',
-      branch_id: uptownBranch.id,
-      menuItemId: menuItem5.id,
-      currentStock: 5,
-      lowStockThreshold: 12,
-      alertDate: new Date('2026-06-02T09:30:00Z'),
-    },
-  });
-
-  const order1 = await prisma.order.upsert({
-    where: { id: 'order1' },
-    update: {
-      status: 'PAID',
-      total_amount: 66.74,
-      orderDate: new Date('2026-05-30T18:00:00Z'),
-    },
-    create: {
-      id: 'order1',
-      customer_id: customer.id,
-      branch_id: branch.id,
-      status: 'PAID',
-      total_amount: 66.74,
-      orderDate: new Date('2026-05-30T18:00:00Z'),
-      items: {
-        create: [
-          { menuItemId: menuItem1.id, quantity: 1, price: 35.99 },
-          { menuItemId: menuItem2.id, quantity: 1, price: 18.5 },
-          { menuItemId: menuItem3.id, quantity: 1, price: 12.25 },
-        ],
-      },
-    },
-  });
-
-  const order2 = await prisma.order.upsert({
-    where: { id: 'order2' },
-    update: {
-      status: 'PAID',
-      total_amount: 46.99,
-      orderDate: new Date('2026-05-30T19:00:00Z'),
-    },
-    create: {
-      id: 'order2',
-      customer_id: repeatCustomer.id,
-      branch_id: branch.id,
-      status: 'PAID',
-      total_amount: 46.99,
-      orderDate: new Date('2026-05-30T19:00:00Z'),
-      items: {
-        create: [
-          { menuItemId: menuItem2.id, quantity: 2, price: 18.5 },
-          { menuItemId: menuItem3.id, quantity: 1, price: 9.99 },
-        ],
-      },
-    },
-  });
-
-  const order3 = await prisma.order.upsert({
-    where: { id: 'order3' },
-    update: {
-      status: 'PAID',
-      total_amount: 50.49,
-      orderDate: new Date('2026-05-31T20:00:00Z'),
-    },
-    create: {
-      id: 'order3',
-      customer_id: customer.id,
-      branch_id: uptownBranch.id,
-      status: 'PAID',
-      total_amount: 50.49,
-      orderDate: new Date('2026-05-31T20:00:00Z'),
-      items: {
-        create: [
-          { menuItemId: menuItem4.id, quantity: 1, price: 29.0 },
-          { menuItemId: menuItem5.id, quantity: 1, price: 9.99 },
-          { menuItemId: menuItem6.id, quantity: 1, price: 11.5 },
-        ],
-      },
-    },
-  });
-
-  const order4 = await prisma.order.upsert({
-    where: { id: 'order4' },
-    update: {
-      status: 'PLACED',
-      total_amount: 32.99,
-      orderDate: new Date('2026-05-31T12:30:00Z'),
-    },
-    create: {
-      id: 'order4',
-      customer_id: repeatCustomer.id,
-      branch_id: uptownBranch.id,
-      status: 'PLACED',
-      total_amount: 32.99,
-      orderDate: new Date('2026-05-31T12:30:00Z'),
-      items: {
-        create: [
-          { menuItemId: menuItem5.id, quantity: 1, price: 9.99 },
-          { menuItemId: menuItem6.id, quantity: 2, price: 11.5 },
-        ],
-      },
-    },
-  });
-
-  const order5 = await prisma.order.upsert({
-    where: { id: 'order5' },
-    update: {
-      status: 'PAID',
-      total_amount: 74.47,
-      orderDate: new Date('2026-06-01T18:00:00Z'),
-    },
-    create: {
-      id: 'order5',
-      customer_id: repeatCustomer.id,
-      branch_id: branch.id,
-      status: 'PAID',
-      total_amount: 74.47,
-      orderDate: new Date('2026-06-01T18:00:00Z'),
-      items: {
-        create: [
-          { menuItemId: menuItem1.id, quantity: 1, price: 35.99 },
-          { menuItemId: menuItem2.id, quantity: 1, price: 18.5 },
-          { menuItemId: menuItem5.id, quantity: 2, price: 9.99 },
-        ],
-      },
-    },
-  });
-
-  console.log({ admin, hqManager, branchManager, waiter, customer, openAccess, repeatCustomer, branch, uptownBranch });
+  console.log('✅ Seed complete');
+  console.log(`   Admin  → admin@steakz.com  / password123`);
+  console.log(`   HQ     → hq@steakz.com     / password123`);
+  console.log(`   Manager→ branch_manager@steakz.com / password123  (${mainBranch.name})`);
+  console.log(`   Waiter → waiter@steakz.com / password123  (${mainBranch.name})`);
+  console.log(`   Customer→ customer@steakz.com / password123`);
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
+  .then(() => prisma.$disconnect())
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();
-    process.exit(1);
+    throw e;
   });

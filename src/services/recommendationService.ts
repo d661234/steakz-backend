@@ -3,63 +3,49 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class RecommendationService {
-  static async getRecommendationsBasedOnFavourites(userId: string) {
-    // Find user's favourite items
+  static async getRecommendationsBasedOnFavourites(userId: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { 
+      include: {
         favouriteItems: {
-          select: { 
-            id: true,
-            category: true
-          }
-        }
-      }
+          select: { id: true, category: true },
+        },
+      },
     });
 
     if (!user || user.favouriteItems.length === 0) {
-      return [];
+      return prisma.menuItem.findMany({
+        where: { availability_status: true },
+        orderBy: { viewCount: 'desc' },
+        take: 6,
+      });
     }
 
-    // Get categories of favourite items
     const favouriteCategories = [...new Set(
-      user.favouriteItems.map(item => item.category).filter((category): category is string => category != null)
+      user.favouriteItems.map(item => item.category).filter((c): c is string => c != null)
     )];
 
-    // Find similar items in those categories
-    const recommendations = await prisma.menuItem.findMany({
+    return prisma.menuItem.findMany({
       where: {
         category: { in: favouriteCategories },
-        NOT: {
-          id: { in: user.favouriteItems.map(item => item.id) }
-        }
+        NOT: { id: { in: user.favouriteItems.map(item => item.id) } },
       },
       take: 5,
-      orderBy: { viewCount: 'desc' }
+      orderBy: { viewCount: 'desc' },
     });
-
-    return recommendations;
   }
 
-  static async getOneClickReorder(userId: string, orderId: string) {
+  static async getOneClickReorder(userId: number, orderId: number) {
     const order = await prisma.order.findFirst({
-      where: { 
-        id: orderId,
-        customer_id: userId
-      },
-      include: { 
-        items: { 
-          include: { menuItem: true } 
-        } 
-      }
+      where: { id: orderId, customer_id: userId },
+      include: { items: { include: { menuItem: true } } },
     });
 
     if (!order) {
       throw new Error('Order not found or does not belong to user');
     }
 
-    // Create a new order with the same items
-    const newOrder = await prisma.order.create({
+    return prisma.order.create({
       data: {
         customer_id: userId,
         branch_id: order.branch_id,
@@ -69,12 +55,10 @@ export class RecommendationService {
           create: order.items.map(item => ({
             menuItemId: item.menuItemId,
             quantity: item.quantity,
-            price: item.price
-          }))
-        }
-      }
+            price: item.price,
+          })),
+        },
+      },
     });
-
-    return newOrder;
   }
 }

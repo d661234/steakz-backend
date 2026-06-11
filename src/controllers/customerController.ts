@@ -5,6 +5,8 @@ import { OrderService } from '../services/orderService.js';
 import { RecommendationService } from '../services/recommendationService.js';
 import { AuthRequest } from '../middleware/auth.js';
 
+const id = (p: string | string[]) => parseInt(p as string);
+
 export class CustomerController {
   static async getProfile(req: AuthRequest, res: Response) {
     try {
@@ -29,7 +31,10 @@ export class CustomerController {
   static async getOrderHistory(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-      const orders = await OrderService.getOrdersByCustomer(req.user.id);
+      // Admin sees all orders; customers see only their own
+      const orders = req.user.role === 'ADMIN'
+        ? await OrderService.getAllOrders()
+        : await OrderService.getOrdersByCustomer(req.user.id);
       res.status(200).json(orders);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch order history' });
@@ -50,15 +55,9 @@ export class CustomerController {
     try {
       if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
 
-      const itemId = req.params.itemId as string;
-      if (!itemId) {
-        return res.status(400).json({ message: 'Item ID is required' });
-      }
+      const itemId = id(req.params.itemId);
 
-      const menuItem = await prisma.menuItem.findUnique({
-        where: { id: itemId },
-      });
-
+      const menuItem = await prisma.menuItem.findUnique({ where: { id: itemId } });
       if (!menuItem) {
         return res.status(404).json({ message: 'Menu item not found' });
       }
@@ -89,11 +88,7 @@ export class CustomerController {
   static async reorder(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-      const orderId = req.params.orderId as string;
-      if (!orderId) {
-        return res.status(400).json({ message: 'Order ID is required' });
-      }
-
+      const orderId = id(req.params.orderId);
       const order = await RecommendationService.getOneClickReorder(req.user.id, orderId);
       res.status(201).json(order);
     } catch (error: unknown) {
