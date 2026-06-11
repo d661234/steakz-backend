@@ -1,0 +1,140 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  HQ_MANAGER
+  BRANCH_MANAGER
+  WAITER
+  CUSTOMER
+  OPEN_ACCESS
+}
+
+enum StockRequestStatus {
+  PENDING
+  ACKNOWLEDGED
+  ORDERED
+  FULFILLED
+}
+
+enum OrderStatus {
+  PLACED
+  COOKING
+  FINISHED_COOKING
+  SERVED
+  BILLED
+  PAID
+  CANCELLED
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  password_hash    String
+  role             UserRole  @default(OPEN_ACCESS)
+  firstName        String?
+  lastName         String?
+  phoneNumber      String?
+  registeredAt     DateTime  @default(now())
+  lastLogin        DateTime?
+  isActive         Boolean   @default(true)
+  branch_id        Int?
+  branch           Branch?   @relation(fields: [branch_id], references: [id])
+  favouriteItems   MenuItem[] @relation("UserFavourites")
+  orders           Order[]
+  roleChangeAudit  RoleChangeAudit[]
+  stockRequests    StockRequest[]
+}
+
+model RoleChangeAudit {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+  previousRole   UserRole
+  newRole        UserRole
+  changedBy      Int
+  changedAt      DateTime @default(now())
+}
+
+model Branch {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  location_address String
+  contactNumber    String?
+  isActive         Boolean   @default(true)
+  latitude         Float?
+  longitude        Float?
+  orders           Order[]
+  menuItems        MenuItem[]
+  staff            User[]
+  inventoryAlerts  InventoryAlert[]
+  stockRequests    StockRequest[]
+}
+
+model MenuItem {
+  id                  Int       @id @default(autoincrement())
+  item_name           String
+  description         String?
+  price               Float
+  branch_id           Int
+  branch              Branch    @relation(fields: [branch_id], references: [id])
+  category            String?
+  availability_status Boolean   @default(true)
+  viewCount           Int       @default(0)
+  orderItems          OrderItem[]
+  favouritedBy        User[]    @relation("UserFavourites")
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  customer_id     Int?
+  user            User?       @relation(fields: [customer_id], references: [id])
+  branch_id       Int
+  branch          Branch      @relation(fields: [branch_id], references: [id])
+  status          OrderStatus @default(PLACED)
+  total_amount    Float
+  orderDate       DateTime    @default(now())
+  items           OrderItem[]
+  isRepeatedOrder Boolean     @default(false)
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItemId Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  price      Float
+}
+
+model InventoryAlert {
+  id                Int      @id @default(autoincrement())
+  branch_id         Int
+  branch            Branch   @relation(fields: [branch_id], references: [id])
+  menuItemId        Int
+  lowStockThreshold Int
+  currentStock      Int
+  alertDate         DateTime @default(now())
+}
+
+model StockRequest {
+  id          Int                @id @default(autoincrement())
+  branch_id   Int
+  branch      Branch             @relation(fields: [branch_id], references: [id])
+  requestedBy Int?
+  user        User?              @relation(fields: [requestedBy], references: [id])
+  item_name   String
+  quantity    Int
+  unit        String             @default("units")
+  notes       String?
+  status      StockRequestStatus @default(PENDING)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
