@@ -13,6 +13,18 @@ async function main() {
     create: { email: 'admin@steakz.com', password_hash: password, role: UserRole.ADMIN, firstName: 'Admin', lastName: 'User' },
   });
 
+  await prisma.user.upsert({
+    where:  { email: 'hq@steakz.com' },
+    update: { password_hash: password, role: UserRole.HQ_MANAGER, firstName: 'HQ', lastName: 'Manager' },
+    create: { email: 'hq@steakz.com', password_hash: password, role: UserRole.HQ_MANAGER, firstName: 'HQ', lastName: 'Manager' },
+  });
+
+  await prisma.user.upsert({
+    where:  { email: 'customer@steakz.com' },
+    update: { password_hash: password, role: UserRole.CUSTOMER, firstName: 'Test', lastName: 'Customer' },
+    create: { email: 'customer@steakz.com', password_hash: password, role: UserRole.CUSTOMER, firstName: 'Test', lastName: 'Customer' },
+  });
+
   // ── Branches (upsert by name) ──────────────────────────────────────────────
   const mainBranch = await prisma.branch.upsert({
     where:  { name: 'Steakz London Branch' },
@@ -24,6 +36,19 @@ async function main() {
     where:  { name: 'Steakz Uptown Branch' },
     update: {},
     create: { name: 'Steakz Uptown Branch', location_address: '456 Grill Street, Manchester' },
+  });
+
+  // ── Branch staff (upsert after branches exist) ────────────────────────────
+  await prisma.user.upsert({
+    where:  { email: 'branch_manager@steakz.com' },
+    update: { password_hash: password, role: UserRole.BRANCH_MANAGER, firstName: 'Branch', lastName: 'Manager', branch_id: mainBranch.id },
+    create: { email: 'branch_manager@steakz.com', password_hash: password, role: UserRole.BRANCH_MANAGER, firstName: 'Branch', lastName: 'Manager', branch_id: mainBranch.id },
+  });
+
+  await prisma.user.upsert({
+    where:  { email: 'waiter@steakz.com' },
+    update: { password_hash: password, role: UserRole.WAITER, firstName: 'Test', lastName: 'Waiter', branch_id: mainBranch.id },
+    create: { email: 'waiter@steakz.com', password_hash: password, role: UserRole.WAITER, firstName: 'Test', lastName: 'Waiter', branch_id: mainBranch.id },
   });
 
   // ── Menu items (only seed if branch has none yet) ─────────────────────────
