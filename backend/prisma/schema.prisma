@@ -16,6 +16,13 @@ enum UserRole {
   OPEN_ACCESS
 }
 
+enum StockRequestStatus {
+  PENDING
+  ACKNOWLEDGED
+  ORDERED
+  FULFILLED
+}
+
 enum OrderStatus {
   PLACED
   COOKING
@@ -27,7 +34,7 @@ enum OrderStatus {
 }
 
 model User {
-  id               String    @id @default(cuid())
+  id               Int       @id @default(autoincrement())
   email            String    @unique
   password_hash    String
   role             UserRole  @default(OPEN_ACCESS)
@@ -37,26 +44,26 @@ model User {
   registeredAt     DateTime  @default(now())
   lastLogin        DateTime?
   isActive         Boolean   @default(true)
-  branch_id        String?
+  branch_id        Int?
   branch           Branch?   @relation(fields: [branch_id], references: [id])
   favouriteItems   MenuItem[] @relation("UserFavourites")
   orders           Order[]
   roleChangeAudit  RoleChangeAudit[]
-  allergies        String[]
+  stockRequests    StockRequest[]
 }
 
 model RoleChangeAudit {
-  id             String   @id @default(cuid())
-  userId         String
+  id             Int      @id @default(autoincrement())
+  userId         Int
   user           User     @relation(fields: [userId], references: [id])
   previousRole   UserRole
   newRole        UserRole
-  changedBy      String
+  changedBy      Int
   changedAt      DateTime @default(now())
 }
 
 model Branch {
-  id               String    @id @default(cuid())
+  id               Int       @id @default(autoincrement())
   name             String    @unique
   location_address String
   contactNumber    String?
@@ -67,52 +74,67 @@ model Branch {
   menuItems        MenuItem[]
   staff            User[]
   inventoryAlerts  InventoryAlert[]
+  stockRequests    StockRequest[]
 }
 
 model MenuItem {
-  id               String    @id @default(cuid())
-  item_name        String
-  description      String?
-  price            Float
-  branch_id        String
-  branch           Branch    @relation(fields: [branch_id], references: [id])
-  category         String?
-  availability_status Boolean @default(true)
-  viewCount        Int       @default(0)
-  orderItems       OrderItem[]
-  favouritedBy     User[]    @relation("UserFavourites")
+  id                  Int       @id @default(autoincrement())
+  item_name           String
+  description         String?
+  price               Float
+  branch_id           Int
+  branch              Branch    @relation(fields: [branch_id], references: [id])
+  category            String?
+  availability_status Boolean   @default(true)
+  viewCount           Int       @default(0)
+  orderItems          OrderItem[]
+  favouritedBy        User[]    @relation("UserFavourites")
 }
 
 model Order {
-  id               String    @id @default(cuid())
-  customer_id      String?
-  user             User?     @relation(fields: [customer_id], references: [id])
-  branch_id        String
-  branch           Branch    @relation(fields: [branch_id], references: [id])
-  status           OrderStatus @default(PLACED)
-  total_amount     Float
-  orderDate        DateTime  @default(now())
-  items            OrderItem[]
-  isRepeatedOrder  Boolean   @default(false)
-  propagated_allergies String[]
+  id              Int         @id @default(autoincrement())
+  customer_id     Int?
+  user            User?       @relation(fields: [customer_id], references: [id])
+  branch_id       Int
+  branch          Branch      @relation(fields: [branch_id], references: [id])
+  status          OrderStatus @default(PLACED)
+  total_amount    Float
+  orderDate       DateTime    @default(now())
+  items           OrderItem[]
+  isRepeatedOrder Boolean     @default(false)
 }
 
 model OrderItem {
-  id               String    @id @default(cuid())
-  orderId          String
-  order            Order     @relation(fields: [orderId], references: [id])
-  menuItemId       String
-  menuItem         MenuItem  @relation(fields: [menuItemId], references: [id])
-  quantity         Int
-  price            Float
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItemId Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  price      Float
 }
 
 model InventoryAlert {
-  id               String    @id @default(cuid())
-  branch_id        String
-  branch           Branch    @relation(fields: [branch_id], references: [id])
-  menuItemId       String
+  id                Int      @id @default(autoincrement())
+  branch_id         Int
+  branch            Branch   @relation(fields: [branch_id], references: [id])
+  menuItemId        Int
   lowStockThreshold Int
-  currentStock     Int
-  alertDate        DateTime  @default(now())
+  currentStock      Int
+  alertDate         DateTime @default(now())
+}
+
+model StockRequest {
+  id          Int                @id @default(autoincrement())
+  branch_id   Int
+  branch      Branch             @relation(fields: [branch_id], references: [id])
+  requestedBy Int?
+  user        User?              @relation(fields: [requestedBy], references: [id])
+  item_name   String
+  quantity    Int
+  unit        String             @default("units")
+  notes       String?
+  status      StockRequestStatus @default(PENDING)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }

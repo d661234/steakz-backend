@@ -3,10 +3,11 @@ import { ReportService } from '../services/reportService.js';
 import { UserService } from '../services/userService.js';
 import { BranchService } from '../services/branchService.js';
 import { UserRole } from '@prisma/client';
+import prisma from '../lib/prisma.js';
 
 type AssignStaffBody = {
-  staffId: string;
-  branchId: string;
+  staffId: number;
+  branchId: number;
 };
 
 export class HQController {
@@ -118,6 +119,37 @@ export class HQController {
       res.status(200).json(alerts);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch inventory alerts' });
+    }
+  }
+
+  static async createInventoryAlert(req: Request, res: Response) {
+    try {
+      const { branch_id, menuItemId, lowStockThreshold, currentStock } = req.body;
+      if (!branch_id || !menuItemId || lowStockThreshold == null || currentStock == null) {
+        return res.status(400).json({ message: 'branch_id, menuItemId, lowStockThreshold and currentStock are required' });
+      }
+      const alert = await prisma.inventoryAlert.create({
+        data: {
+          branch_id: Number(branch_id),
+          menuItemId: Number(menuItemId),
+          lowStockThreshold: Number(lowStockThreshold),
+          currentStock: Number(currentStock),
+        },
+        include: { branch: true },
+      });
+      res.status(201).json(alert);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create inventory alert';
+      res.status(500).json({ message });
+    }
+  }
+
+  static async deleteInventoryAlert(req: Request, res: Response) {
+    try {
+      await prisma.inventoryAlert.delete({ where: { id: parseInt(req.params.id as string) } });
+      res.status(200).json({ message: 'Inventory alert deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to delete inventory alert' });
     }
   }
 }

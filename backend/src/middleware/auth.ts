@@ -6,9 +6,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_change_m
 
 export interface AuthRequest extends Request {
   user?: {
-    id: string;
+    id: number;
     role: UserRole;
-    branch_id?: string | null;
+    branch_id?: number | null;
   };
 }
 

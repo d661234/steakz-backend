@@ -4,8 +4,12 @@
   "description": "Attendance Control System for University Classroom",
   "type": "module",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
-    "start": "node src/index.js",
+    "build": "npx prisma generate && npx prisma migrate deploy && tsc",
+    "start": "node dist/index.js",
     "dev": "nodemon --exec tsx src/index.ts",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
@@ -16,11 +20,13 @@
   "dependencies": {
     "@prisma/client": "6.19.3",
     "bcryptjs": "3.0.3",
+    "cors": "^2.8.6",
     "express": "5.2.1",
     "jsonwebtoken": "9.0.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.9",
@@ -33,7 +39,8 @@
     "ts-jest": "29.4.7",
     "tsx": "4.21.0",
     "typescript": "6.0.2"
-  },"prisma": {
+  },
+  "prisma": {
     "schema": "prisma/schema.prisma"
-}
+  }
 }
