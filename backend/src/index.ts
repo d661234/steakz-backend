@@ -19,7 +19,8 @@ async function ensureAdmin() { // Guarantees an admin account always exists when
     update: { password_hash: hash, role: UserRole.ADMIN }, // Refresh password and confirm ADMIN role on each start
     create: { email: 'admin@steakz.com', password_hash: hash, role: UserRole.ADMIN, firstName: 'Admin', lastName: 'User' }, // Create full admin record if not found
   });
-  console.log('✅ Admin user ready  →  admin@steakz.com / password123'); // Confirm admin is ready in server logs
+  console.log('✅ Admin user ready  →  admin@steakz.com / password123');
+  console.log('🚀 Steakz API v2 — CHEF role enabled');
 }
 
 const app = express(); // Create the Express application instance
